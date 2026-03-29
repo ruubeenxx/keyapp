@@ -1,0 +1,1 @@
+{"name":"KeyApp","short_name":"KeyApp","start_url":"/keyapp/","display":"standalone","background_color":"#0f0a1e","lang":"en","scope":"/keyapp/","description":"Tu app de amor y estudio, Keyla 💕","theme_color":"#7C3AED","orientation":"portrait","icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png"}]}

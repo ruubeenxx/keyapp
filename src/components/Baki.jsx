@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext'
 
 // 🐶 Reemplaza esta URL con la foto de Baki cuando la tengas
 // Por ahora usamos un placeholder con su inicial
-const BAKI_PHOTO = '/keyapp/img/baki.png'
+const BAKI_PHOTO = 'keyapp/img/baki.png'
 
 function BakiAvatar({ size = 40, className = '' }) {
   if (BAKI_PHOTO) {

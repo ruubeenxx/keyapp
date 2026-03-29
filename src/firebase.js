@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
+import { getMessaging, isSupported } from 'firebase/messaging'
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGWkPu38LsBd1lRZPqkaLtfMDwEHWhfkQ",
@@ -12,3 +13,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
+
+// Messaging solo si el browser lo soporta
+export const getMessagingInstance = async () => {
+  const supported = await isSupported()
+  if (supported) return getMessaging(app)
+  return null
+}

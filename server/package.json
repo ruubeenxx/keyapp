@@ -1,0 +1,9 @@
+{
+  "name": "keyapp-server",
+  "version": "1.0.0",
+  "description": "Servidor de notificaciones para KeyApp",
+  "main": "notify.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

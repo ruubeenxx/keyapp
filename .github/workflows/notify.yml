@@ -1,0 +1,26 @@
+name: Notificaciones KeyApp 💕
+
+on:
+  schedule:
+    # Corre todos los días a las 8am hora Colombia (UTC-5 = 13:00 UTC)
+    - cron: '0 13 * * *'
+  workflow_dispatch: # Permite correrlo manualmente para probar
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: cd server && npm install
+
+      - name: Enviar notificaciones
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: cd server && node notify.js

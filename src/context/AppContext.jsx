@@ -20,7 +20,7 @@ const DEFAULT_DATA = {
   transacciones: [],
   presupuestos: [],
   // Amor
-  fechaInicio: '2023-06-24',
+  fechaInicio: '2024-06-15',
   fraseHoy: '',
   diario: [],
   metas: [],
@@ -61,6 +61,54 @@ export function AppProvider({ children }) {
       }
     })
     update('materias', nuevas)
+  }
+
+  const addTarea = (materiaId, momentoId, texto) => {
+    const nuevas = data.materias.map(m => {
+      if (m.id !== materiaId) return m
+      return {
+        ...m,
+        momentos: m.momentos.map(mo => {
+          if (mo.id !== momentoId) return mo
+          return {
+            ...mo,
+            tareas: [...mo.tareas, { id: Date.now(), texto, hecha: false }]
+          }
+        })
+      }
+    })
+    update('materias', nuevas)
+  }
+
+  const deleteTarea = (materiaId, momentoId, tareaId) => {
+    const nuevas = data.materias.map(m => {
+      if (m.id !== materiaId) return m
+      return {
+        ...m,
+        momentos: m.momentos.map(mo => {
+          if (mo.id !== momentoId) return mo
+          return { ...mo, tareas: mo.tareas.filter(t => t.id !== tareaId) }
+        })
+      }
+    })
+    update('materias', nuevas)
+  }
+
+  const updateMomento = (materiaId, momentoId, campos) => {
+    const nuevas = data.materias.map(m => {
+      if (m.id !== materiaId) return m
+      return {
+        ...m,
+        momentos: m.momentos.map(mo =>
+          mo.id === momentoId ? { ...mo, ...campos } : mo
+        )
+      }
+    })
+    update('materias', nuevas)
+  }
+
+  const deleteMateria = (materiaId) => {
+    update('materias', data.materias.filter(m => m.id !== materiaId))
   }
 
   // Helpers finanzas
@@ -111,7 +159,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       data, update,
-      addMateria, toggleTarea,
+      addMateria, toggleTarea, addTarea, deleteTarea, updateMomento, deleteMateria,
       addTransaccion, addPresupuesto,
       addEntradaDiario, addMeta, toggleMeta,
       getStats

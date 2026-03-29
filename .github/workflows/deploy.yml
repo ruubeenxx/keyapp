@@ -24,6 +24,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Copiar firebase-messaging-sw.js a la raíz del build
+        run: cp public/firebase-messaging-sw.js dist/firebase-messaging-sw.js
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

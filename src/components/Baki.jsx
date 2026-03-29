@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react'
 import { X, Send, Loader } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
-// 🐶 Reemplaza esta URL con la foto de Baki cuando la tengas
-// Por ahora usamos un placeholder con su inicial
 const BAKI_PHOTO = '/keyapp/baki.png'
+
+// URL del proxy en Cloudflare
+const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
 
 function BakiAvatar({ size = 40, className = '' }) {
   if (BAKI_PHOTO) {
@@ -44,7 +45,7 @@ DATOS ACTUALES DE KEYLA:
 - Gastos totales del período: $${stats.gastoTotal.toLocaleString('es-CO')}
 - Gasto por categoría: ${JSON.stringify(stats.porCategoria)}
 - Tareas UNAD: ${stats.tareasHechas} de ${stats.tareasTotal} completadas
-- Materias: ${data.materias.map(m => m.nombre).join(', ')}
+- Materias: ${data.materias.map(m => m.nombre).join(', ') || 'ninguna aún'}
 
 Responde siempre en español, de forma corta y cariñosa.
 Si te preguntan por datos, usa los datos reales de arriba.
@@ -73,20 +74,19 @@ export default function Baki() {
 
     try {
       const stats = getStats()
-      const history = [...messages, userMsg].slice(-10) // últimos 10 mensajes
+      const history = [...messages, userMsg].slice(-10)
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(PROXY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 300,
           system: BAKI_SYSTEM(stats, data),
           messages: history
         })
       })
+
       const json = await res.json()
-      const reply = json.content?.[0]?.text || '¡Arf! No pude entender eso 🐶 ¿Puedes repetir?'
+      const reply = json.text || '¡Arf! No pude entender eso 🐶 ¿Puedes repetir?'
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
       setMessages(prev => [...prev, {
@@ -100,12 +100,10 @@ export default function Baki() {
 
   return (
     <>
-      {/* Chat window */}
       {open && (
         <div className="fixed bottom-28 right-4 z-50 w-80 max-h-[65vh] flex flex-col
                         bg-key-card border border-key-border rounded-3xl shadow-2xl
                         animate-slide-up overflow-hidden">
-          {/* Header */}
           <div className="flex items-center gap-3 p-4 border-b border-key-border bg-key-bg/50">
             <BakiAvatar size={36} />
             <div>
@@ -117,7 +115,6 @@ export default function Baki() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
@@ -142,7 +139,6 @@ export default function Baki() {
             <div ref={endRef} />
           </div>
 
-          {/* Input */}
           <div className="p-3 border-t border-key-border flex gap-2">
             <input
               className="input py-2 text-sm flex-1"
@@ -162,7 +158,6 @@ export default function Baki() {
         </div>
       )}
 
-      {/* Floating button */}
       <button
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-24 right-4 z-50 animate-float

@@ -2,15 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tema oscuro (por defecto) ── */
+:root {
+  --key-bg:     #0f0a1e;
+  --key-card:   #1a1130;
+  --key-border: #2d1f4e;
+  --key-text:   #f0e8ff;
+  --key-muted:  #9d8ec4;
+}
+
+/* ── Tema claro ── */
+.light {
+  --key-bg:     #f5f0ff;
+  --key-card:   #ffffff;
+  --key-border: #e2d9f3;
+  --key-text:   #1a0a3e;
+  --key-muted:  #7c6faa;
+}
+
 @layer base {
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 
   body {
-    background-color: #0f0a1e;
-    color: #f0e8ff;
+    background-color: var(--key-bg);
+    color: var(--key-text);
     font-family: 'DM Sans', sans-serif;
     min-height: 100dvh;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::-webkit-scrollbar { width: 0; }
@@ -19,6 +38,7 @@
 @layer components {
   .card {
     @apply bg-key-card border border-key-border rounded-2xl p-4;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
   }
   .btn-primary {
     @apply bg-key-purple text-white font-body font-medium px-5 py-2.5 rounded-xl
@@ -45,17 +65,28 @@
   }
 }
 
-/* Stars background */
+/* Fondo con gradiente ambiental */
 .stars {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Oscuro: gradiente morado/rosa suave */
+:root .stars {
   background:
     radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.15) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 50%);
 }
 
-/* Glow effects */
+/* Claro: gradiente lavanda suave */
+.light .stars {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(236,72,153,0.06) 0%, transparent 50%);
+}
+
 .glow-purple { box-shadow: 0 0 20px rgba(124,58,237,0.3); }
 .glow-pink   { box-shadow: 0 0 20px rgba(236,72,153,0.3); }

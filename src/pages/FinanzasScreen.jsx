@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Target, X } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts'
 import { useApp } from '../context/AppContext'
 
@@ -9,7 +9,7 @@ const COLORES_CAT = { Comida:'#7C3AED', Transporte:'#14b8a6', Estudio:'#ec4899',
 function AddModal({ onClose }) {
   const { addTransaccion, addPresupuesto } = useApp()
   const [tab, setTab] = useState('gasto')
-  const [form, setForm] = useState({ monto: '', categoria: 'Comida', descripcion: '', limite: '' })
+  const [form, setForm] = useState({ monto: '', categoria: 'Comida', descripcion: '' })
 
   const save = () => {
     if (!form.monto) return
@@ -22,9 +22,18 @@ function AddModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end">
-      <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
-        <h2 className="font-display text-xl font-bold text-key-text">Registrar</h2>
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
+      <div
+        className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header con X */}
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-key-text">Registrar</h2>
+          <button onClick={onClose} className="p-2 text-key-muted hover:text-key-text transition-colors">
+            <X size={20} />
+          </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-key-bg rounded-xl p-1">
@@ -43,7 +52,8 @@ function AddModal({ onClose }) {
             {tab === 'presupuesto' ? 'Límite mensual ($)' : 'Monto ($)'}
           </label>
           <input className="input mt-1" type="number" placeholder="0"
-            value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} />
+            value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+            onKeyDown={e => e.key === 'Enter' && save()} autoFocus />
         </div>
 
         <div>
@@ -62,7 +72,7 @@ function AddModal({ onClose }) {
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pb-2">
           <button className="btn-ghost flex-1" onClick={onClose}>Cancelar</button>
           <button className="btn-primary flex-1" onClick={save}>Guardar</button>
         </div>
@@ -82,7 +92,7 @@ const CustomTooltip = ({ active, payload }) => {
 }
 
 export default function FinanzasScreen() {
-  const { data, addPresupuesto } = useApp()
+  const { data } = useApp()
   const [showModal, setShowModal] = useState(false)
   const [vista, setVista] = useState('resumen')
 
@@ -92,14 +102,12 @@ export default function FinanzasScreen() {
   const totalIngresos = ingresos.reduce((s, t) => s + t.monto, 0)
   const balance = totalIngresos - totalGastos
 
-  // Agrupar gastos por categoría para gráficas
   const porCategoria = CATEGORIAS.map(cat => ({
     name: cat,
     value: gastos.filter(t => t.categoria === cat).reduce((s, t) => s + t.monto, 0),
     color: COLORES_CAT[cat]
   })).filter(c => c.value > 0)
 
-  // Presupuesto vs real
   const presupData = data.presupuestos.map(p => ({
     name: p.categoria,
     presupuesto: p.limite,
@@ -109,7 +117,6 @@ export default function FinanzasScreen() {
 
   return (
     <div className="px-4 pt-8 pb-4 space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-key-text">Finanzas</h1>
@@ -153,32 +160,29 @@ export default function FinanzasScreen() {
         ))}
       </div>
 
-      {/* RESUMEN: torta por categoría */}
       {vista === 'resumen' && (
         <div className="space-y-4">
           {porCategoria.length > 0 ? (
-            <>
-              <div className="card">
-                <p className="text-xs text-key-muted mb-3">Gastos por categoría</p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={porCategoria} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
-                      {porCategoria.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-1 mt-2">
-                  {porCategoria.map(c => (
-                    <div key={c.name} className="flex items-center gap-2 text-xs">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                      <span className="text-key-muted truncate">{c.name}</span>
-                      <span className="text-key-text ml-auto">${c.value.toLocaleString('es-CO')}</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="card">
+              <p className="text-xs text-key-muted mb-3">Gastos por categoría</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={porCategoria} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={40}>
+                    {porCategoria.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-2 gap-1 mt-2">
+                {porCategoria.map(c => (
+                  <div key={c.name} className="flex items-center gap-2 text-xs">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
+                    <span className="text-key-muted truncate">{c.name}</span>
+                    <span className="text-key-text ml-auto">${c.value.toLocaleString('es-CO')}</span>
+                  </div>
+                ))}
               </div>
-            </>
+            </div>
           ) : (
             <div className="card text-center py-8">
               <p className="text-3xl mb-2">💸</p>
@@ -188,7 +192,6 @@ export default function FinanzasScreen() {
         </div>
       )}
 
-      {/* PRESUPUESTO: barras comparando */}
       {vista === 'presupuesto' && (
         <div className="space-y-4">
           {presupData.length > 0 ? (
@@ -207,7 +210,6 @@ export default function FinanzasScreen() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              {/* Alertas */}
               {presupData.filter(p => p.gastado >= p.presupuesto * 0.8).map(p => (
                 <div key={p.name} className={`mt-2 px-3 py-2 rounded-xl text-xs flex items-center gap-2 ${
                   p.gastado >= p.presupuesto ? 'bg-red-500/15 text-red-400' : 'bg-key-amber/15 text-key-amber'
@@ -233,7 +235,6 @@ export default function FinanzasScreen() {
         </div>
       )}
 
-      {/* HISTORIAL */}
       {vista === 'historial' && (
         <div className="space-y-2">
           {data.transacciones.length === 0 ? (

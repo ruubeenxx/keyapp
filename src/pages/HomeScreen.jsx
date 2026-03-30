@@ -88,7 +88,7 @@ export default function HomeScreen({ onNavigate }) {
       {/* Header */}
       <div>
         <p className="text-key-muted text-sm">¡Hola, mi amor! 💕</p>
-        <h1 className="font-display text-3xl font-bold text-key-text">Keyla</h1>
+        <h1 className="font-display text-3xl font-bold text-key-text">Te amo</h1>
         <p className="text-key-muted text-sm mt-0.5">{stats.diasJuntos} días juntos 🌙</p>
       </div>
 
@@ -183,7 +183,7 @@ export default function HomeScreen({ onNavigate }) {
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">Eres una campeona, Keyla 💕</p>
+          <p className="text-key-muted text-sm">ihsss amor esoo </p>
         </div>
       )}
     </div>

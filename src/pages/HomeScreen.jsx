@@ -26,7 +26,7 @@ function FraseDelDia() {
         system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio.',
         messages: [{
           role: 'user',
-          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
+          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la U. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
         }]
       })
     })

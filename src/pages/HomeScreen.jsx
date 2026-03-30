@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { BookOpen, AlertTriangle, CheckCircle2, Star } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
+const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
+
 function diasParaCerrar(fecha) {
   const diff = new Date(fecha) - new Date()
   return Math.ceil(diff / 86400000)
@@ -17,26 +19,25 @@ function FraseDelDia() {
     const cachedDate = localStorage.getItem('keyapp-frase-date')
     if (cached && cachedDate === hoy) { setFrase(cached); setLoading(false); return }
 
-    fetch('https://api.anthropic.com/v1/messages', {
+    fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 120,
+        system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio.',
         messages: [{
           role: 'user',
-          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada. Solo la frase, sin comillas, sin explicaciones.'
+          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
         }]
       })
     })
       .then(r => r.json())
       .then(d => {
-        const f = d.content?.[0]?.text || 'Eres increíble, Keyla. ¡Hoy también puedes! 💕'
+        const f = d.text || 'Eres increíble, Keyla. ¡Hoy también puedes! 💕'
         setFrase(f)
         localStorage.setItem('keyapp-frase', f)
         localStorage.setItem('keyapp-frase-date', hoy)
       })
-      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Keyla! 💕'))
+      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Amor! 💕'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -183,7 +184,7 @@ export default function HomeScreen({ onNavigate }) {
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">ihsss amor esoo </p>
+          <p className="text-key-muted text-sm">¡Eres una campeona, Keyla! 💕</p>
         </div>
       )}
     </div>

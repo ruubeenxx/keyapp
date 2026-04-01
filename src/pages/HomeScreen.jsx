@@ -184,7 +184,7 @@ export default function HomeScreen({ onNavigate }) {
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">¡Eres una campeona, Keyla! 💕</p>
+          <p className="text-key-muted text-sm">¡Eres una campeona, amor! 💕</p>
         </div>
       )}
     </div>

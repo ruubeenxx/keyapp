@@ -10,14 +10,14 @@ export default defineConfig({
       manifest: {
         name: 'KeyApp',
         short_name: 'KeyApp',
-        description: 'Tu app de amor y estudio, Keyla 💕',
+        description: 'Tu app de amor y estudio, Amor',
         theme_color: '#7C3AED',
         background_color: '#0f0a1e',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
-          { src: '/keyapp/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/keyapp/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: '/keyapp/keykey.png', sizes: '192x192', type: 'image/png' },
+          { src: '/keyapp/keylaa.png', sizes: '512x512', type: 'image/png' }
         ]
       }
     })

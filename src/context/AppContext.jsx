@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { db } from '../firebase'
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore'
+import { doc, setDoc, onSnapshot } from 'firebase/firestore'
 
 const AppContext = createContext()
-
-// ID único para Keyla — puedes cambiarlo si quieres
 const USER_ID = 'keyla'
 
 const DEFAULT_DATA = {
@@ -13,13 +11,10 @@ const DEFAULT_DATA = {
   presupuestos: [],
   fechaInicio: '2024-06-15',
   fraseHoy: '',
-  diario: [],
-  metas: [],
 }
 
 export function AppProvider({ children }) {
   const [data, setData] = useState(() => {
-    // Carga local mientras sincroniza con Firebase
     try {
       const saved = localStorage.getItem('keyapp-data')
       return saved ? { ...DEFAULT_DATA, ...JSON.parse(saved) } : DEFAULT_DATA
@@ -27,7 +22,6 @@ export function AppProvider({ children }) {
   })
   const [synced, setSynced] = useState(false)
 
-  // Escucha cambios en Firebase en tiempo real
   useEffect(() => {
     const ref = doc(db, 'usuarios', USER_ID)
     const unsub = onSnapshot(ref, (snap) => {
@@ -44,7 +38,6 @@ export function AppProvider({ children }) {
     return () => unsub()
   }, [])
 
-  // Guarda en Firebase y localStorage cada vez que cambian los datos
   const update = async (key, value) => {
     const newData = { ...data, [key]: value }
     setData(newData)
@@ -52,13 +45,17 @@ export function AppProvider({ children }) {
     try {
       await setDoc(doc(db, 'usuarios', USER_ID), newData)
     } catch (e) {
-      console.warn('No se pudo guardar en Firebase, guardado local', e)
+      console.warn('No se pudo guardar en Firebase', e)
     }
   }
 
   // ── UNAD ──
   const addMateria = (materia) => {
     update('materias', [...data.materias, { ...materia, id: Date.now() }])
+  }
+
+  const deleteMateria = (materiaId) => {
+    update('materias', data.materias.filter(m => m.id !== materiaId))
   }
 
   const toggleTarea = (materiaId, momentoId, tareaId) => {
@@ -89,7 +86,13 @@ export function AppProvider({ children }) {
           if (mo.id !== momentoId) return mo
           return {
             ...mo,
-            tareas: [...mo.tareas, { id: Date.now(), texto, hecha: false }]
+            tareas: [...mo.tareas, {
+              id: Date.now(),
+              texto,
+              hecha: false,
+              abre: '',
+              cierra: ''
+            }]
           }
         })
       }
@@ -111,6 +114,25 @@ export function AppProvider({ children }) {
     update('materias', nuevas)
   }
 
+  const updateTarea = (materiaId, momentoId, tareaId, campos) => {
+    const nuevas = data.materias.map(m => {
+      if (m.id !== materiaId) return m
+      return {
+        ...m,
+        momentos: m.momentos.map(mo => {
+          if (mo.id !== momentoId) return mo
+          return {
+            ...mo,
+            tareas: mo.tareas.map(t =>
+              t.id === tareaId ? { ...t, ...campos } : t
+            )
+          }
+        })
+      }
+    })
+    update('materias', nuevas)
+  }
+
   const updateMomento = (materiaId, momentoId, campos) => {
     const nuevas = data.materias.map(m => {
       if (m.id !== materiaId) return m
@@ -122,10 +144,6 @@ export function AppProvider({ children }) {
       }
     })
     update('materias', nuevas)
-  }
-
-  const deleteMateria = (materiaId) => {
-    update('materias', data.materias.filter(m => m.id !== materiaId))
   }
 
   // ── Finanzas ──
@@ -145,22 +163,6 @@ export function AppProvider({ children }) {
     } else {
       update('presupuestos', [...data.presupuestos, { ...p, id: Date.now() }])
     }
-  }
-
-  // ── Amor ──
-  const addEntradaDiario = (texto) => {
-    update('diario', [
-      ...data.diario,
-      { id: Date.now(), texto, fecha: new Date().toISOString() }
-    ])
-  }
-
-  const addMeta = (meta) => {
-    update('metas', [...data.metas, { id: Date.now(), texto: meta, hecha: false }])
-  }
-
-  const toggleMeta = (id) => {
-    update('metas', data.metas.map(m => m.id === id ? { ...m, hecha: !m.hecha } : m))
   }
 
   // ── Stats para Baki ──
@@ -183,9 +185,9 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       data, update, synced,
-      addMateria, toggleTarea, addTarea, deleteTarea, updateMomento, deleteMateria,
+      addMateria, deleteMateria,
+      toggleTarea, addTarea, deleteTarea, updateTarea, updateMomento,
       addTransaccion, addPresupuesto,
-      addEntradaDiario, addMeta, toggleMeta,
       getStats
     }}>
       {children}

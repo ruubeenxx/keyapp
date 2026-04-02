@@ -24,7 +24,7 @@ function AddModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
       <div
-        className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up"
+        className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-10"
         onClick={e => e.stopPropagation()}
       >
         {/* Header con X */}

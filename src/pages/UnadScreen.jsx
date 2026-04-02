@@ -12,38 +12,108 @@ function estaAbierto(abre, cierra) {
   return hoy >= new Date(abre) && hoy <= new Date(cierra)
 }
 
+function TareaItem({ tarea, materiaId, momentoId, color }) {
+  const { toggleTarea, deleteTarea, updateTarea } = useApp()
+  const [showFechas, setShowFechas] = useState(false)
+
+  const abierta = tarea.abre && tarea.cierra ? estaAbierto(tarea.abre, tarea.cierra) : null
+  const dias = tarea.cierra ? diasParaCerrar(tarea.cierra) : null
+
+  let estadoLabel = ''
+  let estadoColor = 'text-key-muted'
+
+  if (tarea.abre && tarea.cierra) {
+    if (abierta) {
+      estadoColor = dias <= 3 ? 'text-red-400' : 'text-key-teal'
+      estadoLabel = dias <= 0 ? '¡Cierra hoy!' : `${dias}d para cerrar`
+    } else if (dias < 0) {
+      estadoLabel = 'Cerrada'
+      estadoColor = 'text-key-muted'
+    } else {
+      const diasAbre = Math.ceil((new Date(tarea.abre) - new Date()) / 86400000)
+      estadoLabel = `Abre en ${diasAbre}d`
+      estadoColor = 'text-key-amber'
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 group">
+        <button
+          onClick={() => toggleTarea(materiaId, momentoId, tarea.id)}
+          className="flex items-center gap-3 flex-1 py-1.5 text-left"
+        >
+          {tarea.hecha
+            ? <CheckCircle2 size={18} style={{ color }} className="flex-shrink-0" />
+            : <Circle size={18} className="text-key-muted flex-shrink-0" />
+          }
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm ${tarea.hecha ? 'line-through text-key-muted' : 'text-key-text'}`}>
+              {tarea.texto}
+            </p>
+            {estadoLabel && (
+              <p className={`text-xs ${estadoColor}`}>{estadoLabel}</p>
+            )}
+          </div>
+        </button>
+        <button
+          onClick={() => setShowFechas(f => !f)}
+          className={`p-1 rounded-lg transition-colors flex-shrink-0 ${showFechas ? 'text-key-purple' : 'text-key-muted opacity-0 group-hover:opacity-100'}`}
+        >
+          <Calendar size={13} />
+        </button>
+        <button
+          onClick={() => deleteTarea(materiaId, momentoId, tarea.id)}
+          className="p-1 text-red-400/60 hover:text-red-400 transition-all flex-shrink-0 opacity-0 group-hover:opacity-100"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {showFechas && (
+        <div className="ml-7 bg-key-bg rounded-xl p-3 space-y-2 border border-key-border">
+          <p className="text-xs text-key-muted font-medium">Fechas de esta actividad</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-key-muted">Abre</label>
+              <input type="date" className="input py-1.5 text-xs mt-1"
+                value={tarea.abre || ''}
+                onChange={e => updateTarea(materiaId, momentoId, tarea.id, { abre: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-key-muted">Cierra</label>
+              <input type="date" className="input py-1.5 text-xs mt-1"
+                value={tarea.cierra || ''}
+                onChange={e => updateTarea(materiaId, momentoId, tarea.id, { cierra: e.target.value })} />
+            </div>
+          </div>
+          <button onClick={() => setShowFechas(false)} className="text-xs text-key-purple font-medium">
+            Listo ✓
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function MomentoCard({ momento, materiaId, color }) {
-  const { toggleTarea, addTarea, deleteTarea, updateMomento } = useApp()
+  const { addTarea } = useApp()
   const [expanded, setExpanded] = useState(true)
-  const [editFechas, setEditFechas] = useState(false)
   const [nuevaTarea, setNuevaTarea] = useState('')
   const [showAddTarea, setShowAddTarea] = useState(false)
 
-  const abierto = estaAbierto(momento.abre, momento.cierra)
-  const dias = diasParaCerrar(momento.cierra)
   const hechas = momento.tareas.filter(t => t.hecha).length
   const total = momento.tareas.length
   const progreso = total ? (hechas / total) * 100 : 0
 
-  let estadoColor = 'text-key-muted'
-  let estadoLabel = 'Sin fechas — toca el calendario'
-  let borderColor = 'border-key-border'
+  // Urgencia basada en las tareas individuales
+  const tareasUrgentes = momento.tareas.filter(t => {
+    if (!t.cierra || t.hecha) return false
+    const dias = diasParaCerrar(t.cierra)
+    return dias >= 0 && dias <= 3
+  })
 
-  if (momento.abre && momento.cierra) {
-    if (abierto) {
-      estadoColor = dias <= 3 ? 'text-red-400' : 'text-key-teal'
-      estadoLabel = dias <= 0 ? '¡Cierra hoy!' : `${dias} días para cerrar`
-      borderColor = dias <= 3 ? 'border-red-500/30' : 'border-key-teal/30'
-    } else if (dias < 0) {
-      estadoLabel = 'Cerrado'
-      estadoColor = 'text-key-muted'
-    } else {
-      const diasAbre = Math.ceil((new Date(momento.abre) - new Date()) / 86400000)
-      estadoLabel = diasAbre > 0 ? `Abre en ${diasAbre} días` : 'Por abrir'
-      estadoColor = 'text-key-amber'
-      borderColor = 'border-key-amber/20'
-    }
-  }
+  const borderColor = tareasUrgentes.length > 0 ? 'border-red-500/30' : 'border-key-border'
 
   const guardarTarea = () => {
     if (!nuevaTarea.trim()) return
@@ -54,49 +124,25 @@ function MomentoCard({ momento, materiaId, color }) {
 
   return (
     <div className={`card border ${borderColor} space-y-3`}>
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-3 flex-1" onClick={() => setExpanded(e => !e)}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: `${color}25` }}>
-            {abierto ? <Unlock size={14} style={{ color }} /> : <Lock size={14} className="text-key-muted" />}
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-key-text">{momento.nombre}</p>
-            <p className={`text-xs ${estadoColor}`}>{estadoLabel}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-key-muted">{hechas}/{total}</span>
-            {expanded ? <ChevronDown size={16} className="text-key-muted" /> : <ChevronRight size={16} className="text-key-muted" />}
-          </div>
-        </button>
-        <button
-          onClick={() => setEditFechas(e => !e)}
-          className={`p-1.5 rounded-lg transition-colors ${editFechas ? 'text-key-purple bg-key-purple/20' : 'text-key-muted'}`}
-        >
-          <Calendar size={14} />
-        </button>
-      </div>
-
-      {editFechas && (
-        <div className="bg-key-bg rounded-xl p-3 space-y-2 border border-key-border">
-          <p className="text-xs text-key-muted font-medium">Fechas del momento</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs text-key-muted">Abre</label>
-              <input type="date" className="input py-1.5 text-xs mt-1" value={momento.abre}
-                onChange={e => updateMomento(materiaId, momento.id, { abre: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs text-key-muted">Cierra</label>
-              <input type="date" className="input py-1.5 text-xs mt-1" value={momento.cierra}
-                onChange={e => updateMomento(materiaId, momento.id, { cierra: e.target.value })} />
-            </div>
-          </div>
-          <button onClick={() => setEditFechas(false)} className="text-xs text-key-purple font-medium">
-            Guardar fechas ✓
-          </button>
+      <button className="w-full flex items-center gap-3" onClick={() => setExpanded(e => !e)}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: `${color}25` }}>
+          {tareasUrgentes.length > 0
+            ? <Unlock size={14} style={{ color: '#ef4444' }} />
+            : <Lock size={14} className="text-key-muted" />
+          }
         </div>
-      )}
+        <div className="flex-1 text-left">
+          <p className="text-sm font-medium text-key-text">{momento.nombre}</p>
+          {tareasUrgentes.length > 0 && (
+            <p className="text-xs text-red-400">{tareasUrgentes.length} actividad(es) urgente(s)</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-key-muted">{hechas}/{total}</span>
+          {expanded ? <ChevronDown size={16} className="text-key-muted" /> : <ChevronRight size={16} className="text-key-muted" />}
+        </div>
+      </button>
 
       <div className="h-1.5 bg-key-bg rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500"
@@ -106,29 +152,20 @@ function MomentoCard({ momento, materiaId, color }) {
       {expanded && (
         <div className="space-y-1 pt-1">
           {momento.tareas.length === 0 && !showAddTarea && (
-            <p className="text-xs text-key-muted text-center py-2">Sin tareas — agrega una 👇</p>
+            <p className="text-xs text-key-muted text-center py-2">Sin actividades — agrega una 👇</p>
           )}
           {momento.tareas.map(tarea => (
-            <div key={tarea.id} className="flex items-center gap-2 group">
-              <button onClick={() => toggleTarea(materiaId, momento.id, tarea.id)}
-                className="flex items-center gap-3 flex-1 py-1.5 text-left">
-                {tarea.hecha
-                  ? <CheckCircle2 size={18} style={{ color }} className="flex-shrink-0" />
-                  : <Circle size={18} className="text-key-muted flex-shrink-0" />}
-                <span className={`text-sm flex-1 ${tarea.hecha ? 'line-through text-key-muted' : 'text-key-text'}`}>
-                  {tarea.texto}
-                </span>
-              </button>
-              <button onClick={() => deleteTarea(materiaId, momento.id, tarea.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 text-red-400/60 hover:text-red-400 transition-all">
-                <Trash2 size={13} />
-              </button>
-            </div>
+            <TareaItem
+              key={tarea.id}
+              tarea={tarea}
+              materiaId={materiaId}
+              momentoId={momento.id}
+              color={color}
+            />
           ))}
-
           {showAddTarea ? (
             <div className="flex gap-2 pt-1">
-              <input className="input py-1.5 text-sm flex-1" placeholder="Nombre de la tarea..."
+              <input className="input py-1.5 text-sm flex-1" placeholder="Nombre de la actividad..."
                 value={nuevaTarea} onChange={e => setNuevaTarea(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && guardarTarea()} autoFocus />
               <button onClick={guardarTarea} className="btn-primary py-1.5 px-3 text-sm">Ok</button>
@@ -139,7 +176,7 @@ function MomentoCard({ momento, materiaId, color }) {
           ) : (
             <button onClick={() => setShowAddTarea(true)}
               className="flex items-center gap-2 text-xs text-key-muted hover:text-key-purple transition-colors pt-1 w-full">
-              <Plus size={13} /> Agregar tarea
+              <Plus size={13} /> Agregar actividad
             </button>
           )}
         </div>
@@ -158,9 +195,9 @@ function AddMateriaModal({ onClose, onAdd }) {
     onAdd({
       nombre: nombre.trim(), color,
       momentos: [
-        { id: Date.now(),   nombre: 'Momento inicial',    abre: '', cierra: '', tareas: [] },
-        { id: Date.now()+1, nombre: 'Momento intermedio', abre: '', cierra: '', tareas: [] },
-        { id: Date.now()+2, nombre: 'Momento final',      abre: '', cierra: '', tareas: [] },
+        { id: Date.now(),   nombre: 'Momento inicial',    tareas: [] },
+        { id: Date.now()+1, nombre: 'Momento intermedio', tareas: [] },
+        { id: Date.now()+2, nombre: 'Momento final',      tareas: [] },
       ]
     })
     onClose()
@@ -169,7 +206,10 @@ function AddMateriaModal({ onClose, onAdd }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end">
       <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
-        <h2 className="font-display text-xl font-bold text-key-text">Nueva materia</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-key-text">Nueva materia</h2>
+          <button onClick={onClose} className="text-key-muted"><X size={20} /></button>
+        </div>
         <input className="input" placeholder="Nombre de la materia" value={nombre}
           onChange={e => setNombre(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus />
         <div>
@@ -182,8 +222,8 @@ function AddMateriaModal({ onClose, onAdd }) {
             ))}
           </div>
         </div>
-        <p className="text-xs text-key-muted">Los 3 momentos se crean solos. Edita fechas y tareas dentro de cada uno.</p>
-        <div className="flex gap-3">
+        <p className="text-xs text-key-muted">Los 3 momentos se crean solos. Agrega actividades y ponles fechas dentro de cada momento.</p>
+        <div className="flex gap-3 pb-2">
           <button className="btn-ghost flex-1" onClick={onClose}>Cancelar</button>
           <button className="btn-primary flex-1" onClick={submit}>Agregar</button>
         </div>
@@ -199,7 +239,7 @@ export default function UnadScreen() {
   const materia = data.materias.find(m => m.id === selectedMateria)
 
   const handleDelete = (id) => {
-    if (window.confirm('¿Eliminar esta materia y todas sus tareas?')) {
+    if (window.confirm('¿Eliminar esta materia y todas sus actividades?')) {
       deleteMateria(id)
       setSelectedMateria(data.materias.find(m => m.id !== id)?.id || null)
     }
@@ -248,7 +288,7 @@ export default function UnadScreen() {
               <p className="font-medium text-key-text">{materia.nombre}</p>
               <p className="text-xs text-key-muted">
                 {materia.momentos.flatMap(mo => mo.tareas).filter(t => t.hecha).length} de{' '}
-                {materia.momentos.flatMap(mo => mo.tareas).length} tareas completadas
+                {materia.momentos.flatMap(mo => mo.tareas).length} actividades completadas
               </p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown, Target, X } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Target, X, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts'
 import { useApp } from '../context/AppContext'
 
@@ -24,7 +24,7 @@ function AddModal({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
       <div
-        className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-28"
+        className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-10"
         onClick={e => e.stopPropagation()}
       >
         {/* Header con X */}
@@ -93,6 +93,7 @@ const CustomTooltip = ({ active, payload }) => {
 
 export default function FinanzasScreen() {
   const { data } = useApp()
+  const { deleteTransaccion } = useApp()
   const [showModal, setShowModal] = useState(false)
   const [vista, setVista] = useState('resumen')
 
@@ -255,6 +256,12 @@ export default function FinanzasScreen() {
                 <p className={`text-sm font-medium flex-shrink-0 ${t.tipo === 'gasto' ? 'text-red-400' : 'text-key-teal'}`}>
                   {t.tipo === 'gasto' ? '-' : '+'}${t.monto.toLocaleString('es-CO')}
                 </p>
+                <button
+                  onClick={() => deleteTransaccion(t.id)}
+                  className="p-1.5 text-red-400/50 hover:text-red-400 transition-colors flex-shrink-0"
+                >
+                  <Trash2 size={15} />
+                </button>
               </div>
             ))
           )}

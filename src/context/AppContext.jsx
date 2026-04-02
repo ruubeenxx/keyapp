@@ -154,6 +154,10 @@ export function AppProvider({ children }) {
     ])
   }
 
+  const deleteTransaccion = (id) => {
+    update('transacciones', data.transacciones.filter(t => t.id !== id))
+  }
+
   const addPresupuesto = (p) => {
     const exists = data.presupuestos.find(x => x.categoria === p.categoria)
     if (exists) {
@@ -187,7 +191,7 @@ export function AppProvider({ children }) {
       data, update, synced,
       addMateria, deleteMateria,
       toggleTarea, addTarea, deleteTarea, updateTarea, updateMomento,
-      addTransaccion, addPresupuesto,
+      addTransaccion, deleteTransaccion, addPresupuesto,
       getStats
     }}>
       {children}

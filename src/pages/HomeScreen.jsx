@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BookOpen, AlertTriangle, CheckCircle2, Star } from 'lucide-react'
+import { BookOpen, AlertTriangle, CheckCircle2, Star, Calendar } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
 const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
@@ -26,7 +26,7 @@ function FraseDelDia() {
         system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio.',
         messages: [{
           role: 'user',
-          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la U. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
+          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
         }]
       })
     })
@@ -37,7 +37,7 @@ function FraseDelDia() {
         localStorage.setItem('keyapp-frase', f)
         localStorage.setItem('keyapp-frase-date', hoy)
       })
-      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Amor! 💕'))
+      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Keyla! 💕'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -62,34 +62,34 @@ export default function HomeScreen({ onNavigate }) {
   const { data, getStats } = useApp()
   const stats = getStats()
 
-  const tareasPendientesUrgentes = data.materias.flatMap(m =>
+  const todasTareas = data.materias.flatMap(m =>
     m.momentos.flatMap(mo =>
       mo.tareas
         .filter(t => !t.hecha)
-        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, cierra: mo.cierra }))
+        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre }))
     )
-  ).filter(t => {
+  )
+
+  const tareasPendientesUrgentes = todasTareas.filter(t => {
+    if (!t.cierra) return false
     const dias = diasParaCerrar(t.cierra)
     return dias >= 0 && dias <= 7
   }).slice(0, 3)
 
-  const tareasProximas = data.materias.flatMap(m =>
-    m.momentos.flatMap(mo =>
-      mo.tareas
-        .filter(t => !t.hecha)
-        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, cierra: mo.cierra }))
-    )
-  ).filter(t => {
+  const tareasProximas = todasTareas.filter(t => {
+    if (!t.cierra) return false
     const dias = diasParaCerrar(t.cierra)
     return dias > 7 && dias <= 30
   }).slice(0, 3)
+
+  const tareasSinFecha = todasTareas.filter(t => !t.cierra).slice(0, 3)
 
   return (
     <div className="px-4 pt-8 pb-4 space-y-5">
       {/* Header */}
       <div>
         <p className="text-key-muted text-sm">¡Hola, mi amor! 💕</p>
-        <h1 className="font-display text-3xl font-bold text-key-text">Te amo</h1>
+        <h1 className="font-display text-3xl font-bold text-key-text">Keyla</h1>
         <p className="text-key-muted text-sm mt-0.5">{stats.diasJuntos} días juntos 🌙</p>
       </div>
 
@@ -180,11 +180,37 @@ export default function HomeScreen({ onNavigate }) {
         </div>
       )}
 
-      {tareasPendientesUrgentes.length === 0 && tareasProximas.length === 0 && (
+      {/* Tareas sin fecha */}
+      {tareasSinFecha.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Calendar size={14} className="text-key-muted" />
+            <p className="text-xs font-medium text-key-muted uppercase tracking-wider">Sin fecha asignada</p>
+          </div>
+          {tareasSinFecha.map(t => (
+            <button
+              key={t.id}
+              onClick={() => onNavigate('unad')}
+              className="w-full card text-left flex items-center gap-3 active:scale-95 transition-transform"
+            >
+              <div className="w-8 h-8 rounded-xl bg-key-muted/20 flex items-center justify-center flex-shrink-0">
+                <Calendar size={14} className="text-key-muted" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-key-text truncate">{t.texto}</p>
+                <p className="text-xs text-key-muted truncate">{t.materia} · {t.momento}</p>
+              </div>
+              <span className="text-xs text-key-amber flex-shrink-0">Ponle fecha</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tareasPendientesUrgentes.length === 0 && tareasProximas.length === 0 && tareasSinFecha.length === 0 && (
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">¡Eres una campeona, amor! 💕</p>
+          <p className="text-key-muted text-sm">¡Eres una campeona, Keyla! 💕</p>
         </div>
       )}
     </div>

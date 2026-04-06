@@ -157,7 +157,7 @@ export default function HomeScreen({ onNavigate }) {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <CheckCircle2 size={14} className="text-key-teal" />
-            <p className="text-xs font-medium text-key-teal uppercase tracking-wider">Próximas tareas</p>
+            <p className="text-xs font-medium text-key-teal uppercase tracking-wider">Tareas que cierran pronto</p>
           </div>
           {tareasProximas.map(t => (
             <button

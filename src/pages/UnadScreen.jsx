@@ -207,7 +207,7 @@ function AddMateriaModal({ onClose, onAdd }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end">
-      <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-10">
+      <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-32">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-bold text-key-text">Nueva materia</h2>
           <button onClick={onClose} className="text-key-muted"><X size={20} /></button>

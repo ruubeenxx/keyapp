@@ -26,18 +26,18 @@ function FraseDelDia() {
         system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio.',
         messages: [{
           role: 'user',
-          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
+          content: 'Genera UNA sola frase de amor y motivación para luli, una chica que estudia. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
         }]
       })
     })
       .then(r => r.json())
       .then(d => {
-        const f = d.text || 'Eres increíble, Keyla. ¡Hoy también puedes! 💕'
+        const f = d.text || 'Eres increíble, Amor. ¡Hoy también puedes! 💕'
         setFrase(f)
         localStorage.setItem('keyapp-frase', f)
         localStorage.setItem('keyapp-frase-date', hoy)
       })
-      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Keyla! 💕'))
+      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Luli! '))
       .finally(() => setLoading(false))
   }, [])
 
@@ -89,7 +89,7 @@ export default function HomeScreen({ onNavigate }) {
       {/* Header */}
       <div>
         <p className="text-key-muted text-sm">¡Hola, mi amor! 💕</p>
-        <h1 className="font-display text-3xl font-bold text-key-text">Keyla</h1>
+        <h1 className="font-display text-3xl font-bold text-key-text">TE AMO</h1>
         <p className="text-key-muted text-sm mt-0.5">{stats.diasJuntos} días juntos 🌙</p>
       </div>
 
@@ -210,7 +210,7 @@ export default function HomeScreen({ onNavigate }) {
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">¡Eres una campeona, Keyla! 💕</p>
+          <p className="text-key-muted text-sm">¡ajooo amor! 💕</p>
         </div>
       )}
     </div>

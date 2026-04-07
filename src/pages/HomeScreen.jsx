@@ -4,16 +4,22 @@ import { useApp } from '../context/AppContext'
 
 const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
 
-function diasParaCerrar(fecha) {
-  const hoy = new Date()
-  const cierre = parseFechaLocal(fecha)
+function diasParaCerrar(fechaCierre) {
+  // fechaCierre viene como string tipo "2026-04-14" o Date
 
-  hoy.setHours(0, 0, 0, 0)
-  cierre.setHours(0, 0, 0, 0)
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);        // Medianoche de hoy en hora local
 
-  const diff = cierre - hoy
+  const cierre = new Date(fechaCierre);
+  cierre.setHours(0, 0, 0, 0);     // Medianoche del día de cierre
 
-  return Math.ceil(diff / 86400000)
+  // Diferencia en milisegundos
+  const diferencia = cierre - hoy;
+
+  // Convertir a días completos (ceil para que si es hoy → 0)
+  let dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, dias);        // Nunca mostrar número negativo
 }
 
 function FraseDelDia() {

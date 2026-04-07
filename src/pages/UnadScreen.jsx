@@ -3,8 +3,14 @@ import { ChevronDown, ChevronRight, CheckCircle2, Circle, Plus, BookOpen, Trash2
 import { useApp } from '../context/AppContext'
 
 function diasParaCerrar(fecha) {
-  const diff = new Date(fecha) - new Date()
-  return Math.ceil(diff / 86400000)
+  const hoy = new Date()
+  const cierre = new Date(fecha)
+  // Comparar solo fechas, ignorando la hora
+  const hoyStr = hoy.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+  const cierreStr = cierre.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+  const hoyDate = new Date(hoyStr)
+  const cierreDate = new Date(cierreStr)
+  return Math.round((cierreDate - hoyDate) / 86400000)
 }
 
 function estaAbierto(abre, cierra) {

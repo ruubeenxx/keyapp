@@ -4,15 +4,15 @@ import { useApp } from '../context/AppContext'
 
 function diasParaCerrar(fecha) {
   const hoy = new Date()
-  const cierre = new Date(fecha)
-  // Comparar solo fechas, ignorando la hora
-  const hoyStr = hoy.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-  const cierreStr = cierre.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-  const hoyDate = new Date(hoyStr)
-  const cierreDate = new Date(cierreStr)
-  return Math.round((cierreDate - hoyDate) / 86400000)
-}
+  const cierre = parseFechaLocal(fecha)
 
+  hoy.setHours(0, 0, 0, 0)
+  cierre.setHours(0, 0, 0, 0)
+
+  const diff = cierre - hoy
+
+  return Math.ceil(diff / 86400000)
+}
 function estaAbierto(abre, cierra) {
   const hoy = new Date()
   return hoy >= new Date(abre) && hoy <= new Date(cierra)

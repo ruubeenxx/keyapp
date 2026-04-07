@@ -6,13 +6,9 @@ const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
 
 function diasParaCerrar(fecha) {
   const hoy = new Date()
-  const cierre = new Date(fecha)
-  // Comparar solo fechas, ignorando la hora
   const hoyStr = hoy.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-  const cierreStr = cierre.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
-  const hoyDate = new Date(hoyStr)
-  const cierreDate = new Date(cierreStr)
-  return Math.round((cierreDate - hoyDate) / 86400000)
+  const cierreStr = new Date(fecha).toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+  return Math.round((new Date(cierreStr) - new Date(hoyStr)) / 86400000)
 }
 
 function FraseDelDia() {
@@ -32,18 +28,18 @@ function FraseDelDia() {
         system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio.',
         messages: [{
           role: 'user',
-          content: 'Genera UNA sola frase de amor y motivación para luli, una chica que estudia. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
+          content: 'Genera UNA sola frase de amor y motivación para Keyla, una chica que estudia en la UNAD. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
         }]
       })
     })
       .then(r => r.json())
       .then(d => {
-        const f = d.text || 'Eres increíble, Amor. ¡Hoy también puedes! 💕'
+        const f = d.text || 'Eres increíble, Keyla. ¡Hoy también puedes! 💕'
         setFrase(f)
         localStorage.setItem('keyapp-frase', f)
         localStorage.setItem('keyapp-frase-date', hoy)
       })
-      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Luli! '))
+      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, Keyla! 💕'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -68,34 +64,32 @@ export default function HomeScreen({ onNavigate }) {
   const { data, getStats } = useApp()
   const stats = getStats()
 
-  const todasTareas = data.materias.flatMap(m =>
+  // Todas las tareas pendientes con fecha, ordenadas por días restantes
+  const tareasConFecha = data.materias.flatMap(m =>
     m.momentos.flatMap(mo =>
       mo.tareas
-        .filter(t => !t.hecha)
-        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre }))
+        .filter(t => !t.hecha && t.cierra)
+        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, diasRestantes: diasParaCerrar(t.cierra) }))
     )
   )
+  .filter(t => t.diasRestantes >= 0) // solo las que no han cerrado
+  .sort((a, b) => a.diasRestantes - b.diasRestantes) // ordenar de más urgente a menos
+  .slice(0, 5) // máximo 5
 
-  const tareasPendientesUrgentes = todasTareas.filter(t => {
-    if (!t.cierra) return false
-    const dias = diasParaCerrar(t.cierra)
-    return dias >= 0 && dias <= 7
-  }).slice(0, 3)
-
-  const tareasProximas = todasTareas.filter(t => {
-    if (!t.cierra) return false
-    const dias = diasParaCerrar(t.cierra)
-    return dias > 7 && dias <= 30
-  }).slice(0, 3)
-
-  const tareasSinFecha = todasTareas.filter(t => !t.cierra).slice(0, 3)
+  const tareasSinFecha = data.materias.flatMap(m =>
+    m.momentos.flatMap(mo =>
+      mo.tareas
+        .filter(t => !t.hecha && !t.cierra)
+        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre }))
+    )
+  ).slice(0, 3)
 
   return (
     <div className="px-4 pt-8 pb-4 space-y-5">
       {/* Header */}
       <div>
         <p className="text-key-muted text-sm">¡Hola, mi amor! 💕</p>
-        <h1 className="font-display text-3xl font-bold text-key-text">TE AMO</h1>
+        <h1 className="font-display text-3xl font-bold text-key-text">Keyla</h1>
         <p className="text-key-muted text-sm mt-0.5">{stats.diasJuntos} días juntos 🌙</p>
       </div>
 
@@ -109,48 +103,50 @@ export default function HomeScreen({ onNavigate }) {
           <p className="text-2xl font-bold text-key-text">{stats.tareasHechas}/{stats.tareasTotal}</p>
           <p className="text-xs text-key-muted">Tareas UNAD</p>
           <div className="mt-2 h-1.5 bg-key-bg rounded-full overflow-hidden">
-            <div
-              className="h-full bg-key-purple rounded-full transition-all"
-              style={{ width: stats.tareasTotal ? `${(stats.tareasHechas/stats.tareasTotal)*100}%` : '0%' }}
-            />
+            <div className="h-full bg-key-purple rounded-full transition-all"
+              style={{ width: stats.tareasTotal ? `${(stats.tareasHechas/stats.tareasTotal)*100}%` : '0%' }} />
           </div>
         </button>
-
         <button onClick={() => onNavigate('finanzas')} className="card text-left active:scale-95 transition-transform">
           <p className="text-xs text-key-muted mb-2">Gastos del mes</p>
-          <p className="text-2xl font-bold text-key-text">
-            ${stats.gastoTotal.toLocaleString('es-CO')}
-          </p>
+          <p className="text-2xl font-bold text-key-text">${stats.gastoTotal.toLocaleString('es-CO')}</p>
           <p className="text-xs text-key-muted mt-1">
             {data.transacciones.filter(t => t.tipo === 'gasto').length} movimientos
           </p>
         </button>
       </div>
 
-      {/* Tareas urgentes */}
-      {tareasPendientesUrgentes.length > 0 && (
+      {/* Lista única de tareas ordenadas por urgencia */}
+      {tareasConFecha.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <AlertTriangle size={14} className="text-red-400" />
-            <p className="text-xs font-medium text-red-400 uppercase tracking-wider">Urgente — cierran pronto</p>
+            <p className="text-xs font-medium text-red-400 uppercase tracking-wider">Actividades pendientes</p>
           </div>
-          {tareasPendientesUrgentes.map(t => {
-            const dias = diasParaCerrar(t.cierra)
+          {tareasConFecha.map(t => {
+            const urgente = t.diasRestantes <= 7
             return (
               <button
                 key={t.id}
                 onClick={() => onNavigate('unad')}
-                className="w-full card border-red-500/20 text-left flex items-center gap-3 active:scale-95 transition-transform"
+                className={`w-full card text-left flex items-center gap-3 active:scale-95 transition-transform ${
+                  urgente ? 'border-red-500/20' : ''
+                }`}
               >
-                <div className="w-8 h-8 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle size={14} className="text-red-400" />
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  urgente ? 'bg-red-500/20' : 'bg-key-teal/20'
+                }`}>
+                  {urgente
+                    ? <AlertTriangle size={14} className="text-red-400" />
+                    : <CheckCircle2 size={14} className="text-key-teal" />
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-key-text font-medium truncate">{t.texto}</p>
                   <p className="text-xs text-key-muted truncate">{t.materia} · {t.momento}</p>
                 </div>
-                <span className="text-xs text-red-400 font-medium flex-shrink-0">
-                  {dias === 0 ? '¡Hoy!' : `${dias}d`}
+                <span className={`text-xs font-medium flex-shrink-0 ${urgente ? 'text-red-400' : 'text-key-teal'}`}>
+                  {t.diasRestantes === 0 ? '¡Hoy!' : `${t.diasRestantes}d`}
                 </span>
               </button>
             )
@@ -158,49 +154,18 @@ export default function HomeScreen({ onNavigate }) {
         </div>
       )}
 
-      {/* Tareas próximas */}
-      {tareasProximas.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={14} className="text-key-teal" />
-            <p className="text-xs font-medium text-key-teal uppercase tracking-wider">Tareas que cierran pronto</p>
-          </div>
-          {tareasProximas.map(t => (
-            <button
-              key={t.id}
-              onClick={() => onNavigate('unad')}
-              className="w-full card text-left flex items-center gap-3 active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 rounded-xl bg-key-teal/20 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 size={14} className="text-key-teal" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-key-text truncate">{t.texto}</p>
-                <p className="text-xs text-key-muted truncate">{t.materia} · {t.momento}</p>
-              </div>
-              <span className="text-xs text-key-muted flex-shrink-0">
-                {diasParaCerrar(t.cierra)}d
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Tareas sin fecha */}
       {tareasSinFecha.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Calendar size={14} className="text-key-muted" />
-            <p className="text-xs font-medium text-key-muted uppercase tracking-wider">Sin fecha asignada</p>
+            <Calendar size={14} className="text-key-amber" />
+            <p className="text-xs font-medium text-key-amber uppercase tracking-wider">Sin fecha — ponles fecha</p>
           </div>
           {tareasSinFecha.map(t => (
-            <button
-              key={t.id}
-              onClick={() => onNavigate('unad')}
-              className="w-full card text-left flex items-center gap-3 active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 rounded-xl bg-key-muted/20 flex items-center justify-center flex-shrink-0">
-                <Calendar size={14} className="text-key-muted" />
+            <button key={t.id} onClick={() => onNavigate('unad')}
+              className="w-full card text-left flex items-center gap-3 active:scale-95 transition-transform">
+              <div className="w-8 h-8 rounded-xl bg-key-amber/20 flex items-center justify-center flex-shrink-0">
+                <Calendar size={14} className="text-key-amber" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-key-text truncate">{t.texto}</p>
@@ -212,11 +177,11 @@ export default function HomeScreen({ onNavigate }) {
         </div>
       )}
 
-      {tareasPendientesUrgentes.length === 0 && tareasProximas.length === 0 && tareasSinFecha.length === 0 && (
+      {tareasConFecha.length === 0 && tareasSinFecha.length === 0 && (
         <div className="card text-center py-8">
           <p className="text-3xl mb-2">🎉</p>
           <p className="text-key-text font-medium">¡Sin tareas pendientes!</p>
-          <p className="text-key-muted text-sm">¡ajooo amor! 💕</p>
+          <p className="text-key-muted text-sm">¡Eres una campeona, Keyla! 💕</p>
         </div>
       )}
     </div>

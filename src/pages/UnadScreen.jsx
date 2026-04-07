@@ -2,22 +2,16 @@ import React, { useState } from 'react'
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, Plus, BookOpen, Trash2, Calendar, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 
-function diasParaCerrar(fechaCierre) {
-  // fechaCierre viene como string tipo "2026-04-14" o Date
-
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);        // Medianoche de hoy en hora local
-
-  const cierre = new Date(fechaCierre);
-  cierre.setHours(0, 0, 0, 0);     // Medianoche del día de cierre
-
-  // Diferencia en milisegundos
-  const diferencia = cierre - hoy;
-
-  // Convertir a días completos (ceil para que si es hoy → 0)
-  let dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
-
-  return Math.max(0, dias);        // Nunca mostrar número negativo
+function diasParaCerrar(fecha) {
+  // Parsear manualmente para evitar problemas de zona horaria
+  const [anio, mes, dia] = fecha.split('-').map(Number)
+  const cierre = new Date(anio, mes - 1, dia) // mes-1 porque JS empieza en 0
+  
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  cierre.setHours(0, 0, 0, 0)
+  
+  return Math.round((cierre - hoy) / 86400000)
 }
 
 function estaAbierto(abre, cierra) {

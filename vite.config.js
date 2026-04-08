@@ -16,8 +16,8 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         icons: [
-          { src: '/keyapp/keykey.png', sizes: '192x192', type: 'image/png' },
-          { src: '/keyapp/keylaa.png', sizes: '512x512', type: 'image/png' }
+          { src: '/keyapp/keyapp1.jpeg', sizes: '192x192', type: 'image/jpeg' },
+          { src: '/keyapp/keyapp2.jpeg', sizes: '512x512', type: 'image/jpeg' }
         ]
       }
     })

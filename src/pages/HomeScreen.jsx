@@ -5,15 +5,10 @@ import { useApp } from '../context/AppContext'
 const PROXY_URL = 'https://keyapp-proxy.lrubenfernandez.workers.dev'
 
 function diasParaCerrar(fecha) {
-  // Parsear manualmente para evitar problemas de zona horaria
-  const [anio, mes, dia] = fecha.split('-').map(Number)
-  const cierre = new Date(anio, mes - 1, dia) // mes-1 porque JS empieza en 0
-  
   const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  cierre.setHours(0, 0, 0, 0)
-  
-  return Math.round((cierre - hoy) / 86400000)
+  const hoyStr = hoy.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+  const cierreStr = new Date(fecha).toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
+  return Math.round((new Date(cierreStr) - new Date(hoyStr)) / 86400000)
 }
 
 function FraseDelDia() {
@@ -30,7 +25,7 @@ function FraseDelDia() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio y en español.',
+        system: 'Eres un asistente que genera frases bonitas de amor y motivación. Responde SOLO con la frase, sin comillas, sin explicaciones, sin emojis al inicio las frases tiene que ser en español.',
         messages: [{
           role: 'user',
           content: 'Genera UNA sola frase de amor y motivación para luli, una chica que estudia. Debe ser corta (máx 2 líneas), tierna, que la motive a hacer sus tareas y que se sienta amada.'
@@ -39,12 +34,12 @@ function FraseDelDia() {
     })
       .then(r => r.json())
       .then(d => {
-        const f = d.text || 'Eres increíble, amor. ¡Hoy también puedes! 💕'
+        const f = d.text || 'Eres increíble, amorr. ¡Hoy también puedes! 💕'
         setFrase(f)
         localStorage.setItem('keyapp-frase', f)
         localStorage.setItem('keyapp-frase-date', hoy)
       })
-      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños. ¡Tú puedes, luli! 💕'))
+      .catch(() => setFrase('Cada tarea que completas es un paso más hacia tus sueños.💕'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -65,7 +60,7 @@ function FraseDelDia() {
   )
 }
 
-export default function HomeScreen({ onNavigate }) {
+export default function HomeScreen({ onNavigate, onNavigateToTarea }) {
   const { data, getStats } = useApp()
   const stats = getStats()
 
@@ -74,7 +69,7 @@ export default function HomeScreen({ onNavigate }) {
     m.momentos.flatMap(mo =>
       mo.tareas
         .filter(t => !t.hecha && t.cierra)
-        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, diasRestantes: diasParaCerrar(t.cierra) }))
+        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, materiaId: m.id, diasRestantes: diasParaCerrar(t.cierra) }))
     )
   )
   .filter(t => t.diasRestantes >= 0) // solo las que no han cerrado
@@ -85,7 +80,7 @@ export default function HomeScreen({ onNavigate }) {
     m.momentos.flatMap(mo =>
       mo.tareas
         .filter(t => !t.hecha && !t.cierra)
-        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre }))
+        .map(t => ({ ...t, materia: m.nombre, momento: mo.nombre, materiaId: m.id }))
     )
   ).slice(0, 3)
 
@@ -94,7 +89,7 @@ export default function HomeScreen({ onNavigate }) {
       {/* Header */}
       <div>
         <p className="text-key-muted text-sm">¡Hola, mi amor! 💕</p>
-        <h1 className="font-display text-3xl font-bold text-key-text">TE AMO</h1>
+        <h1 className="font-display text-3xl font-bold text-key-text">TE AMOO</h1>
         <p className="text-key-muted text-sm mt-0.5">{stats.diasJuntos} días juntos 🌙</p>
       </div>
 
@@ -133,7 +128,7 @@ export default function HomeScreen({ onNavigate }) {
             return (
               <button
                 key={t.id}
-                onClick={() => onNavigate('unad')}
+                onClick={() => onNavigateToTarea(t.materiaId)}
                 className={`w-full card text-left flex items-center gap-3 active:scale-95 transition-transform ${
                   urgente ? 'border-red-500/20' : ''
                 }`}
@@ -167,7 +162,7 @@ export default function HomeScreen({ onNavigate }) {
             <p className="text-xs font-medium text-key-amber uppercase tracking-wider">Sin fecha — ponles fecha</p>
           </div>
           {tareasSinFecha.map(t => (
-            <button key={t.id} onClick={() => onNavigate('unad')}
+            <button key={t.id} onClick={() => onNavigateToTarea(t.materiaId)}
               className="w-full card text-left flex items-center gap-3 active:scale-95 transition-transform">
               <div className="w-8 h-8 rounded-xl bg-key-amber/20 flex items-center justify-center flex-shrink-0">
                 <Calendar size={14} className="text-key-amber" />

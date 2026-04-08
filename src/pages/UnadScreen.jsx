@@ -3,15 +3,8 @@ import { ChevronDown, ChevronRight, CheckCircle2, Circle, Plus, BookOpen, Trash2
 import { useApp } from '../context/AppContext'
 
 function diasParaCerrar(fecha) {
-  // Parsear manualmente para evitar problemas de zona horaria
-  const [anio, mes, dia] = fecha.split('-').map(Number)
-  const cierre = new Date(anio, mes - 1, dia) // mes-1 porque JS empieza en 0
-  
-  const hoy = new Date()
-  hoy.setHours(0, 0, 0, 0)
-  cierre.setHours(0, 0, 0, 0)
-  
-  return Math.round((cierre - hoy) / 86400000)
+  const diff = new Date(fecha) - new Date()
+  return Math.ceil(diff / 86400000)
 }
 
 function estaAbierto(abre, cierra) {
@@ -214,7 +207,7 @@ function AddMateriaModal({ onClose, onAdd }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-end">
-      <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-32">
+      <div className="w-full max-w-md mx-auto bg-key-card rounded-t-3xl p-6 space-y-4 animate-slide-up pb-10">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl font-bold text-key-text">Nueva materia</h2>
           <button onClick={onClose} className="text-key-muted"><X size={20} /></button>
@@ -241,10 +234,15 @@ function AddMateriaModal({ onClose, onAdd }) {
   )
 }
 
-export default function UnadScreen() {
+export default function UnadScreen({ initialMateriaId }) {
   const { data, addMateria, deleteMateria } = useApp()
   const [showModal, setShowModal] = useState(false)
-  const [selectedMateria, setSelectedMateria] = useState(data.materias[0]?.id || null)
+  const [selectedMateria, setSelectedMateria] = useState(initialMateriaId || data.materias[0]?.id || null)
+  
+  // Si llega una materia específica desde inicio, seleccionarla
+  React.useEffect(() => {
+    if (initialMateriaId) setSelectedMateria(initialMateriaId)
+  }, [initialMateriaId])
   const materia = data.materias.find(m => m.id === selectedMateria)
 
   const handleDelete = (id) => {

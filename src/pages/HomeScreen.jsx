@@ -16,7 +16,7 @@ function diasParaCerrar(fecha) {
   return Math.round((cierre - hoy) / 86400000)
 }
 
-function FraseDelDia() {a
+function FraseDelDia() {
   const [frase, setFrase] = useState('')
   const [loading, setLoading] = useState(true)
 
